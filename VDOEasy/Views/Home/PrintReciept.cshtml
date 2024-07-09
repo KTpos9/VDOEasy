@@ -1,0 +1,100 @@
+﻿@using System.Text.RegularExpressions
+@model VDOEasy.Models.PrintRecieptModel
+@{
+    Layout = null;
+}
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+
+    .receipt {
+        width: 600px;
+        border: 1px solid black;
+        padding: 20px;
+        margin: auto;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .details {
+        margin-bottom: 20px;
+    }
+
+        .details div {
+            margin-bottom: 5px;
+        }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+        .table, .table th, .table td {
+            border: 1px solid black;
+        }
+
+            .table th, .table td {
+                padding: 10px;
+                text-align: center;
+            }
+
+    .signature {
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+<div class="receipt">
+    <div class="header">
+        <h1>ใบเสร็จรับเงิน</h1>
+        <p>วันที่ [วันที่ออกใบเสร็จ]</p>
+    </div>
+    <div class="details">
+        <div class="d-flex gap-2">
+            <div class="fw-bold">รหัสสมาชิก </div>
+            <div>@Model.Id</div>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="fw-bold">ชื่อ</div>
+            <div> @Model.FirstName @Model.LastName</div>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="fw-bold">ที่อยู่</div>
+            <div>@Model.Address</div>
+        </div>
+        
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ลำดับ</th>
+                <th>รายการ</th>
+                <th>จำนวนเงิน</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var match = Regex.Match(Model.MemberType, @"(\d{3,4})");
+                var result = match.Groups[0].Value;
+            }
+            <tr>
+                <td>1</td>
+                <td>ค่าสมัครสมาชิกประเภท @Model.MemberType</td>
+                <td>@result</td>
+            </tr>
+            <tr>
+                <td colspan="2">รวมเงิน</td>
+                <td>@result</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="d-flex flex-column">
+        <div>ลงชื่อ ................................. ผู้รับเงิน</div>
+        <div>นายปองพล ขาวดี</div>
+    </div>
+</div>

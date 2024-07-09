@@ -1,0 +1,185 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model VDOEasy.Models.HomeViewModel
+@* <div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div> *@
+<style>
+    h6{
+        margin-bottom: 0;
+    }
+</style>
+<div class="row align-items-center ibox-content" style="row-gap:1rem;">
+    <div class="card">
+        <div class="row align-items-center card-body" style="row-gap:1rem;">
+            <div class="col-md-6 col-sm-12">
+                <div class="d-flex flex-column" style="gap:1rem;">
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-sm-3 col-12 p-0">
+                            <h6 class="text-sm-end">Id</h6>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <input type="text" class="form-control" id="textId"/>
+                        </div>
+                    </div>
+                    <div class="row align-items-center justify-content-center">
+                        <div class="col-sm-3 col-12 p-0">
+                            <h6 class="text-sm-end">First Name</h6>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <input type="text" class="form-control" id="textFirstName" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-sm-12">
+                <div class="d-flex flex-column" style="gap: 1rem;">
+                    <div class="row align-items-center justify-content-md-start justify-content-center align-items-center">
+                        <div class="col-sm-2 col-12 p-0">
+                            <h6 class="text-sm-end">Birthdate</h6>
+                        </div>
+                        <div class="col-sm-6 col-12">
+                            <input class="form-control" type="date" id="textBirthdate" />
+                        </div>
+                    </div>
+                    <div class="row align-items-center justify-content-md-start justify-content-center align-items-center">
+                        <div class="col-sm-2 p-0">
+                            <h6 class="text-sm-end">Last Name</h6>
+                        </div>
+                        <div class="col-sm-6">
+                            <input class="form-control" type="text" id="textLastName" />
+                        </div>
+                        <div class="col-sm-3 col-4 mt-sm-0 mt-2">
+                            <button type="button" class="btn btn-primary" id="search-button"><i class="bi bi-search"></i> Search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body table-responsive">
+            <div class="d-flex w-100 justify-content-end mb-2">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMemberModal"><i class="bi bi-plus-lg"></i> Add New</button>
+            </div>
+            <table id="member-table" class="table table-bordered table-hover table-striped" style="width:100%;" cellspacing="0"></table>
+        </div>
+    </div>
+</div>
+<partial name="_AddMemberPartial" model="Model"/>
+<div id="edit-user">
+</div>
+@section Scripts{
+    <script>
+        let memberTable;
+        $(document).ready(function () {
+            memberTable = $('#member-table').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "searching": false,
+                "scrollX": true,
+                "pageLength": 10,
+                "displayStart": 0,
+                "bFilter": true,
+                "bLengthChange": false,
+                "ajax": {
+                    url: '@Url.Action("Search")',
+                    type: "POST",
+                    data: (opt) => {
+                        return {
+                            memberId: `${$('#textId').val()}`,
+                            firstName: `${$('#textFirstName').val()}`,
+                            lastName: `${$('#textLastName').val()}`,
+                            birthdate: `${$('#textDepartment').val()}`,
+                            option: opt
+                        };
+                    },
+                },
+                "columns": [
+                    { title: "Id", data: "id" },
+                    { title: "First Name", data: "firstname" },
+                    { title: "Last Name", data: "lastname" },
+                    { title: "Birthdate", data: "birthdate" },
+                    { title: "Address", data: "address" },
+                    { title: "Action", data: "id", render: renderActionButtons }
+                ]
+            });
+            $("#search-button").click(() => {
+                memberTable.ajax.reload();
+            });
+        });
+        function renderActionButtons(data, type, row) {
+            return `<div class="d-flex justify-content-center" style="gap:.5rem">
+                        <button class="btn btn-primary" onclick="editMember('${data}')"> <i class="bi bi-pen-fill"></i></button>
+                        <button class="btn btn-outline-success" onclick="printReciept('${data}')"><i class="bi bi-file-earmark-text"></i></button>
+                        <button class="btn btn-danger" onclick="deleteMember('${data}')"><i class="bi bi-trash-fill"></i></button>
+                    </div>`;
+        }
+        function editMember(memberId) {
+            console.log("edit btn")
+            $.ajax({
+                url: '@Url.Action("GetEditUserModal")',
+                type: 'POST',
+                data: { memberId: memberId },
+                success: (result) => {
+                    $("#edit-user").html(result);
+                    $("#editModalCenter").modal("show")
+                },
+                error: (data) => {
+                    console.log(data);
+                }
+            });
+        }
+        function deleteMember(memberId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.value) {
+                    console.log(memberId)
+                    $.ajax({
+                        url: '@Url.Action("DeleteMember")',
+                        type: 'DELETE',
+                        data: { memberId: memberId },
+                        success: () => {
+                            memberTable.ajax.reload();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function printReciept(memberId) {
+            window.open(`/Home/PrintReciept?memberId=${memberId}`, "_blank");
+        }
+    </script>
+
+    <script>
+    //     $(document).ready(() => {
+    //         $("#addMemberForm").validate({
+    //             rules: {
+    //                 textFirstname: { required: true, maxlength: 100 },
+    //                 textLastname: { required: true, maxlength: 100 },
+    //                 textAddress: { required: true, maxlength: 225 },
+    //                 birthdate: { required: true }
+    //             }
+    //         })
+    //         $("#saveChangesBtn").click(function () {
+    //             // if ($("#addMemberForm").valid()) {
+    //             //     console.log("Valid");
+    //             // }
+    //         });
+    //     })
+    // </script>
+}
